@@ -7,6 +7,10 @@ from __future__ import absolute_import
 from Queue import Queue
 from threading import Event, Thread
 import httplib2
+import logging
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 class Promise:
@@ -20,7 +24,11 @@ class Promise:
         self.response = response
         self.content = content
         if self.__callback is not None:
-            self.__callback(self)
+            try:
+                self.__callback(self)
+            except Exception, e:
+                logger.exception('callback failed')
+                self.exception = e
         self.__flag.set()
         self.__flag = None
 
