@@ -32,10 +32,10 @@ def sleepingThenReturn(self, delay, *return_values):
     for return_value in return_values:
         answer = SleepingReturn(delay, return_value)
         if not self.answer:
-          self.answer = CompositeAnswer(answer)
-          self.invocation.stub_with(self.answer)
+            self.answer = CompositeAnswer(answer)
+            self.invocation.stub_with(self.answer)
         else:
-          self.answer.add(answer)
+            self.answer.add(answer)
     return self
 
 
@@ -89,7 +89,7 @@ class HttpTest(TestCase):
         # verify mock
         verify(client).add_credentials('user', 'pass')
         verify(client).add_certificate('ikeyfile', 'certfile', 'url')
-        self.assertEqual(client.follow_redirects, 44, 
+        self.assertEqual(client.follow_redirects, 44,
                          'attribute set on client')
 
     def test_request(self):
@@ -128,14 +128,14 @@ class HttpTest(TestCase):
         # check the responses
         for request in requests:
             promise = request['promise']
-            self.assertEqual(promise.response, request['return'][0], 
+            self.assertEqual(promise.response, request['return'][0],
                              'received expected response')
-            self.assertEqual(promise.content, request['return'][1], 
+            self.assertEqual(promise.content, request['return'][1],
                              'received expected content')
 
         # verify mock
         for request in requests:
-            inorder.verify(client).request(*request['args'], 
+            inorder.verify(client).request(*request['args'],
                                            **request['kwargs'])
 
     def test_workers(self):
@@ -152,11 +152,11 @@ class HttpTest(TestCase):
         # 5 workers, 8 requests
         h = Http(max_workers=5)
         start = datetime.now()
-        promises = [ h.request(url) for i in range(0, 8) ]
+        promises = [h.request(url) for i in range(0, 8)]
         for promise in promises:
-            self.assertEqual(promise.response, 42, 
+            self.assertEqual(promise.response, 42,
                              'received expected response')
-            self.assertEqual(promise.content, 43, 
+            self.assertEqual(promise.content, 43,
                              'received expected content')
         duration = datetime.now() - start
         expected = delay * 2
@@ -168,11 +168,11 @@ class HttpTest(TestCase):
         # 10 workers, 10 requests
         h = Http(max_workers=10)
         start = datetime.now()
-        promises = [ h.request(url) for i in range(0, 10) ]
+        promises = [h.request(url) for i in range(0, 10)]
         for promise in promises:
-            self.assertEqual(promise.response, 42, 
+            self.assertEqual(promise.response, 42,
                              'received expected response')
-            self.assertEqual(promise.content, 43, 
+            self.assertEqual(promise.content, 43,
                              'received expected content')
         duration = datetime.now() - start
         min = timedelta(seconds=(delay - 0.1))
@@ -183,11 +183,11 @@ class HttpTest(TestCase):
         # 10 workers, 5 requests
         h = Http(max_workers=10)
         start = datetime.now()
-        promises = [ h.request(url) for i in range(0, 5) ]
+        promises = [h.request(url) for i in range(0, 5)]
         for promise in promises:
-            self.assertEqual(promise.response, 42, 
+            self.assertEqual(promise.response, 42,
                              'received expected response')
-            self.assertEqual(promise.content, 43, 
+            self.assertEqual(promise.content, 43,
                              'received expected content')
         duration = datetime.now() - start
         min = timedelta(seconds=(delay - 0.1))

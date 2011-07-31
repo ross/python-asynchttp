@@ -8,15 +8,19 @@ from Queue import Queue
 from threading import Event, Thread
 import httplib2
 
+
 class Promise:
 
-    def __init__(self):
+    def __init__(self, callback=None):
         self.__flag = Event()
+        self.__callback = callback
 
     def set(self, response, content):
         '''called when the response is back'''
         self.response = response
         self.content = content
+        if self.__callback is not None:
+            self.__callback(self)
         self.__flag.set()
         self.__flag = None
 
@@ -78,10 +82,10 @@ class Http(dict):
         self.__client_methods['add_certificate'] = [args, kwargs]
 
     def __setattr__(self, name, value):
-        if not self.__dict__.has_key('_Http__initializsed'):
+        if '_Http__initializsed' not in self.__dict__:
             # for the __init__ method
             self.__dict__[name] = value
-        elif self.__dict__.has_key(name):
+        elif name in self.__dict__:
             # max_workers
             dict.__setattr__(self, name, value)
         else:

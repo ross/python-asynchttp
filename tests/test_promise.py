@@ -54,3 +54,14 @@ class PromiseTest(TestCase):
         self.assertTrue(min < duration and duration < max,
                         'took around 1s to get response and content')
         self.assertTrue(promise.done, 'promise now done')
+
+    def test_callback(self):
+
+        def callback(promise):
+            promise.called = True
+
+        promise = Promise(callback)
+        promise.set(42, 43)
+        self.assertEqual(promise.response, 42)
+        self.assertEqual(promise.content, 43)
+        self.assertTrue(promise.called)
