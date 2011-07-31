@@ -29,12 +29,19 @@ class Promise:
 
     def __getattr__(self, name):
         if name == 'done':
+            # done should not wait
             return self.__done()
-        elif self.__flag and (name == 'response' or name == 'content'):
+        elif self.__flag and not name.startswith('__'):
+            # everything else except private stuff __ should
             self.__flag.wait()
+        try:
+            # we should be complete now, try to access whatever we were asked
+            # for in __dict__
             return self.__dict__[name]
-        raise AttributeError("%r object has no attribute %r" %
-                             (type(self).__name__, name))
+        except KeyError, e:
+            # and translate KeyErrors in to AttributeErrors
+            raise AttributeError("%r object has no attribute %r" %
+                                 (type(self).__name__, name))
 
     def __repr__(self):
         return '<Response({0})>'.format(self.__done())

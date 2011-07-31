@@ -218,12 +218,10 @@ class HttpTest(TestCase):
         def check_called(promise):
             return promise.called
 
-        # before done, callback hasn't happened
-        self.assertRaises(AttributeError, check_called, promise)
+        self.assertTrue(promise.called, 'callback was invoked')
+        self.assertTrue(promise.done, 'checking called, blocked')
         self.assertEqual(promise.response, 42, 'received expected response')
         self.assertEqual(promise.content, 43, 'received expected content')
-        # after done it has
-        self.assertTrue(promise.called, 'callback was invoked')
 
         # verify mock
         verify(client).request(url)
