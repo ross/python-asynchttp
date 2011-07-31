@@ -1,0 +1,5 @@
+coverage
+httplib2
+nose
+pep8
+unittest2
