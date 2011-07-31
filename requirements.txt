@@ -1,5 +1,6 @@
 coverage
 httplib2
+mockito
 nose
 pep8
 unittest2
