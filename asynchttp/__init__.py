@@ -105,7 +105,11 @@ class Http(dict):
         return client
 
     def request(self, *args, **kwargs):
-        promise = Promise()
+        if 'callback' in kwargs:
+            promise = Promise(kwargs['callback'])
+            del kwargs['callback']
+        else:
+            promise = Promise()
 
         # we need to queue the work before we create the worker to work on it
         # to avoid the worker looking for a job, not finding one, and quitting

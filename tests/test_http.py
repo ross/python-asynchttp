@@ -197,3 +197,33 @@ class HttpTest(TestCase):
 
         # verify mock
         verify(client, times=23).request(url)
+
+    def test_callback(self):
+
+        def callback(promise):
+            promise.called = True
+
+        url = 'http://localhost'
+
+        # set up the mock
+        client = mock()
+        # NOTE: callback won't be passed on to client call
+        when(client).request(url).sleepingThenReturn(0.1, [42, 43])
+        HttpTest.client = client
+
+        # make the request
+        h = Http()
+        promise = h.request(url, callback=callback)
+
+        def check_called(promise):
+            return promise.called
+
+        # before done, callback hasn't happened
+        self.assertRaises(AttributeError, check_called, promise)
+        self.assertEqual(promise.response, 42, 'received expected response')
+        self.assertEqual(promise.content, 43, 'received expected content')
+        # after done it has
+        self.assertTrue(promise.called, 'callback was invoked')
+
+        # verify mock
+        verify(client).request(url)
