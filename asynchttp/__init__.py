@@ -11,23 +11,23 @@ import httplib2
 class Promise:
 
     def __init__(self):
-        self._flag = Event()
+        self.__flag = Event()
 
     def set(self, response, content):
         '''called when the response is back'''
         self.response = response
         self.content = content
-        self._flag.set()
-        self._flag = None
+        self.__flag.set()
+        self.__flag = None
 
     def __done(self):
-        return self._flag is None
+        return self.__flag is None
 
     def __getattr__(self, name):
         if name == 'done':
             return self.__done()
-        elif self._flag and (name == 'response' or name == 'content'):
-            self._flag.wait()
+        elif self.__flag and (name == 'response' or name == 'content'):
+            self.__flag.wait()
             return self.__dict__[name]
         raise AttributeError("%r object has no attribute %r" %
                              (type(self).__name__, name))
