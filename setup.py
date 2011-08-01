@@ -32,5 +32,5 @@ setup(
     packages=['asynchttp'],
     provides=['asynchttp'],
     requires=['httplib2(>=0.5.0)'],
-    install_requires=['httplib2(>=0.5.0)'],
+    install_requires=['httplib2>=0.5.0'],
 )
