@@ -19,8 +19,7 @@ class Promise:
         self.__flag = Event()
         self.__callback = callback
 
-    def set(self, response, content):
-        '''called when the response is back'''
+    def fulfill(self, response, content):
         self.response = response
         self.content = content
         if self.__callback is not None:
@@ -28,31 +27,84 @@ class Promise:
                 self.__callback(self)
             except Exception, e:
                 logger.exception('callback failed')
-                self.exception = e
+                self.response.exception = e
         self.__flag.set()
-        self.__flag = None
 
-    def __done(self):
-        return self.__flag is None
+    def done(self):
+        return self.__flag.is_set()
 
-    def __getattr__(self, name):
-        if name == 'done':
-            # done should not wait
-            return self.__done()
-        elif self.__flag and not name.startswith('__'):
-            # everything else except private stuff __ should
-            self.__flag.wait()
-        try:
-            # we should be complete now, try to access whatever we were asked
-            # for in __dict__
-            return self.__dict__[name]
-        except KeyError, e:
-            # and translate KeyErrors in to AttributeErrors
-            raise AttributeError("%r object has no attribute %r" %
-                                 (type(self).__name__, name))
+    def __wait(self):
+        self.__flag.wait()
+
+    def get_response(self):
+        self.__wait()
+        return self.response
+
+    def get_content(self):
+        self.__wait()
+        return self.content
 
     def __repr__(self):
-        return '<Response({0})>'.format(self.__done())
+        return '<Response({0})>'.format(self.done())
+
+
+# TODO: is there a better way to do this? it's really just a proxy that lets us
+# make sure the promise has been fulfilled
+class Response(dict):
+
+    def __init__(self, promise):
+        self.__promise = promise
+
+    def __getitem__(self, key):
+        return self.__promise.get_response()[key]
+
+    def __contains__(self, key):
+        return self.__promise.get_response().__contains__(key)
+
+    def keys(self):
+        return self.__promise.get_response().keys()
+
+    def values(self):
+        return self.__promise.get_response().values()
+
+    def items(self):
+        return self.__promise.get_response().items()
+
+    def __iter__(self):
+        return self.__promise.get_response().__iter__()
+
+    def __len__(self):
+        return self.__promise.get_response().__len__()
+
+    def __setitem__(self, key, value):
+        return self.__promise.get_response().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        return self.__promise.get_response().__delitem__(key)
+
+    def __eq__(self, other):
+        return self.__promise.get_response().__eq__(other)
+
+    def __ne__(self, other):
+        return self.__promise.get_response().__ne__(other)
+
+    def __getattr__(self, name):
+        return getattr(self.__promise.get_response(), name)
+
+
+class Content:
+
+    def __init__(self, promise):
+        self.__promise = promise
+
+    def __getattr__(self, name):
+        return getattr(self.__promise.get_content(), name)
+
+    def __str__(self):
+        return self.__promise.get_content()
+
+    def __repr__(self):
+        return self.__promise.get_content()
 
 
 class _Worker(Thread):
@@ -67,7 +119,7 @@ class _Worker(Thread):
         while not self.__http._has_work():
             (promise, args, kwargs) = self.__http._get_work()
             response, content = self.__handle.request(*args, **kwargs)
-            promise.set(response, content)
+            promise.fulfill(response, content)
         self.__http._remove_worker(self)
 
 
@@ -139,7 +191,7 @@ class Http(dict):
             self.__workers.append(worker)
             worker.start()
 
-        return promise
+        return Response(promise), Content(promise)
 
     # stuff that only workers care about
 

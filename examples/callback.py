@@ -15,24 +15,21 @@ import logging
 http = Http()
 
 def callback(promise):
-    data = loads(promise.content)
-    promise.items = data['items']
-    promise.count = len(data['items'])
+    promise.response.data = loads(promise.content)
 
-promise = http.request('http://proximobus.appspot.com/agencies.json',
-                       callback=callback)
+response, content = http.request('http://proximobus.appspot.com/agencies.json',
+                                 callback=callback)
 
 # do something else here while the request is being downloaded and decoded...
 
-pprint(promise.items)
-print promise.count
+pprint(response.data)
 
 # handling exceptions in callbacks
 
 def failing_callback(promise):
     raise Exception('catch me if you can')
 
-promise = http.request('http://proximobus.appspot.com/agencies.json',
-                       callback=failing_callback)
+response, content = http.request('http://proximobus.appspot.com/agencies.json',
+                                 callback=failing_callback)
 
-pprint(promise.exception)
+pprint(response.exception)

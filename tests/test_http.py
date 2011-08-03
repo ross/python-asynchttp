@@ -56,15 +56,18 @@ class HttpTest(TestCase):
         url = 'http://localhost'
 
         # set up the mock
+        mock_response = {}
+        mock_content = 'boo'
         client = mock()
-        when(client).request(url).thenReturn([42, 43])
+        when(client).request(url).thenReturn([mock_response, mock_content])
         HttpTest.client = client
 
         # make the request
         h = Http()
-        promise = h.request(url)
-        self.assertEqual(promise.response, 42, 'received expected response')
-        self.assertEqual(promise.content, 43, 'received expected content')
+        response, content = h.request(url)
+        self.assertEqual(response, mock_response, 'received expected response')
+        self.assertEqual(str(content), mock_content, 
+                         'received expected content')
 
         # verify mock
         verify(client).request(url)
@@ -98,7 +101,7 @@ class HttpTest(TestCase):
             {
                 'args': ['http://localhost'],
                 'kwargs': {},
-                'return': (42, 43),
+                'return': ({}, 'this is the first'),
             },
             {
                 'args': ['http://localhost'],
@@ -108,7 +111,7 @@ class HttpTest(TestCase):
                     },
                     'body': 'this is a body',
                 },
-                'return': (43, 44),
+                'return': ({}, 'this is the second'),
             },
         ]
 
@@ -127,10 +130,10 @@ class HttpTest(TestCase):
 
         # check the responses
         for request in requests:
-            promise = request['promise']
-            self.assertEqual(promise.response, request['return'][0],
+            response, content = request['promise']
+            self.assertEqual(response, request['return'][0],
                              'received expected response')
-            self.assertEqual(promise.content, request['return'][1],
+            self.assertEqual(str(content), request['return'][1],
                              'received expected content')
 
         # verify mock
@@ -145,18 +148,20 @@ class HttpTest(TestCase):
         delay = 0.1
 
         # set up the mock
+        mock_response = {}
         client = mock()
-        when(client).request(url).sleepingThenReturn(delay, [42, 43])
+        when(client).request(url).sleepingThenReturn(delay, [mock_response, 
+                                                             'hi there'])
         HttpTest.client = client
 
         # 5 workers, 8 requests
         h = Http(max_workers=5)
         start = datetime.now()
-        promises = [h.request(url) for i in range(0, 8)]
-        for promise in promises:
-            self.assertEqual(promise.response, 42,
+        pairs = [h.request(url) for i in range(0, 8)]
+        for pair in pairs:
+            self.assertEqual(pair[0], mock_response,
                              'received expected response')
-            self.assertEqual(promise.content, 43,
+            self.assertEqual(str(pair[1]), 'hi there',
                              'received expected content')
         duration = datetime.now() - start
         expected = delay * 2
@@ -169,10 +174,10 @@ class HttpTest(TestCase):
         h = Http(max_workers=10)
         start = datetime.now()
         promises = [h.request(url) for i in range(0, 10)]
-        for promise in promises:
-            self.assertEqual(promise.response, 42,
+        for pair in pairs:
+            self.assertEqual(pair[0], mock_response,
                              'received expected response')
-            self.assertEqual(promise.content, 43,
+            self.assertEqual(str(pair[1]), 'hi there',
                              'received expected content')
         duration = datetime.now() - start
         min = timedelta(seconds=(delay - 0.1))
@@ -184,10 +189,10 @@ class HttpTest(TestCase):
         h = Http(max_workers=10)
         start = datetime.now()
         promises = [h.request(url) for i in range(0, 5)]
-        for promise in promises:
-            self.assertEqual(promise.response, 42,
+        for pair in pairs:
+            self.assertEqual(pair[0], mock_response,
                              'received expected response')
-            self.assertEqual(promise.content, 43,
+            self.assertEqual(str(pair[1]), 'hi there',
                              'received expected content')
         duration = datetime.now() - start
         min = timedelta(seconds=(delay - 0.1))
@@ -201,27 +206,27 @@ class HttpTest(TestCase):
     def test_callback(self):
 
         def callback(promise):
-            promise.called = True
+            promise.content = 'hello world'
 
         url = 'http://localhost'
 
         # set up the mock
+        mock_response = mock()
+        mock_content = 'not what you are looking for'
         client = mock()
         # NOTE: callback won't be passed on to client call
-        when(client).request(url).sleepingThenReturn(0.1, [42, 43])
+        when(client).request(url).sleepingThenReturn(0.1, [mock_response,
+                                                           mock_content])
         HttpTest.client = client
 
         # make the request
         h = Http()
-        promise = h.request(url, callback=callback)
+        response, content = h.request(url, callback=callback)
 
-        def check_called(promise):
-            return promise.called
-
-        self.assertTrue(promise.called, 'callback was invoked')
-        self.assertTrue(promise.done, 'checking called, blocked')
-        self.assertEqual(promise.response, 42, 'received expected response')
-        self.assertEqual(promise.content, 43, 'received expected content')
+        self.assertEqual(str(content), 'hello world', 'callback was invoked')
 
         # verify mock
         verify(client).request(url)
+
+    def test_request_errors(self):
+        pass
