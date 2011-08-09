@@ -26,10 +26,16 @@ pprint(response.data)
 
 # handling exceptions in callbacks
 
+class SomeException(Exception):
+    pass
+
 def failing_callback(promise):
-    raise Exception('catch me if you can')
+    raise SomeException('catch me if you can')
 
 response, content = http.request('http://proximobus.appspot.com/agencies.json',
                                  callback=failing_callback)
 
-pprint(response.exception)
+try:
+    response.status
+except SomeException, e:
+    print "caught the expected exception, caused by the callback: %s" % e

@@ -19,15 +19,17 @@ class Promise:
         self.__flag = Event()
         self.__callback = callback
 
-    def fulfill(self, response, content):
+    def fulfill(self, response, content, exception=None):
         self.response = response
         self.content = content
+        self.exception = exception
         if self.__callback is not None:
             try:
                 self.__callback(self)
             except Exception, e:
-                logger.exception('callback failed')
-                self.response.exception = e
+                logger.exception('callback threw an exception')
+                if self.exception is None:
+                    self.exception = e
         self.__flag.set()
 
     def done(self):
@@ -35,6 +37,8 @@ class Promise:
 
     def __wait(self):
         self.__flag.wait()
+        if self.exception:
+            raise self.exception
 
     def get_response(self):
         self.__wait()
@@ -118,8 +122,13 @@ class _Worker(Thread):
         # we'll only live while there's work for us to do
         while not self.__http._has_work():
             (promise, args, kwargs) = self.__http._get_work()
-            response, content = self.__handle.request(*args, **kwargs)
-            promise.fulfill(response, content)
+            try:
+                response, content = self.__handle.request(*args, **kwargs)
+                promise.fulfill(response, content)
+            except Exception, e:
+                logger.warn('request raised exception: %s', e)
+                promise.fulfill(None, None, e)
+
         self.__http._remove_worker(self)
 
 

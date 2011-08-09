@@ -66,3 +66,17 @@ class PromiseTest(TestCase):
         self.assertEqual(promise.get_response(), 42)
         self.assertEqual(promise.get_content(), 43)
         self.assertTrue(promise.called)
+
+    def test_callback_error_handling(self):
+
+        class BooException(Exception):
+            pass
+
+        def failing_callback(promise):
+            raise BooException('hoo!')
+
+        promise = Promise(failing_callback)
+        promise.fulfill(42, 43)
+        self.assertIsInstance(promise.exception, BooException)
+        self.assertRaises(BooException, promise.get_response)
+        self.assertRaises(BooException, promise.get_content)

@@ -203,6 +203,27 @@ class HttpTest(TestCase):
         # verify mock
         verify(client, times=23).request(url)
 
+    def test_request_errors(self):
+
+        class BooException(Exception):
+            pass
+
+        url = 'http://localhost'
+
+        # set up the mock
+        client = mock()
+        when(client).request(url).thenRaise(BooException('hoo!'))
+        HttpTest.client = client
+
+        # make the request
+        h = Http()
+        response, content = h.request(url)
+        self.assertRaises(BooException, response.__getitem__, 'status')
+        self.assertRaises(BooException, content)
+
+        # verify mock
+        verify(client).request(url)
+
     def test_callback(self):
 
         def callback(promise):
@@ -227,6 +248,3 @@ class HttpTest(TestCase):
 
         # verify mock
         verify(client).request(url)
-
-    def test_request_errors(self):
-        pass
