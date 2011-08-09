@@ -123,7 +123,9 @@ class _Worker(Thread):
         while not self.__http._has_work():
             (promise, args, kwargs) = self.__http._get_work()
             try:
+                print "sending"
                 response, content = self.__handle.request(*args, **kwargs)
+                print "recieved"
                 promise.fulfill(response, content)
             except Exception, e:
                 logger.warn('request raised exception: %s', e)
@@ -157,20 +159,24 @@ class Http(dict):
     def add_certificate(self, *args, **kwargs):
         self.__client_methods['add_certificate'] = [args, kwargs]
 
+    # TODO: changing attributes won't update existing clients
     def __setattr__(self, name, value):
         if '_Http__initializsed' not in self.__dict__:
             # for the __init__ method
             self.__dict__[name] = value
-        elif name in self.__dict__:
-            # max_workers
-            dict.__setattr__(self, name, value)
-        else:
+        elif name not in self.__dict__:
+            # anything we don't know about we need to pass along to the clients
             # follow_redirects
             # follow_all_redirects
             # force_exception_to_status_code
             # optimistic_concurrency_methods
             # ignore_etag
             self.__client_attributes[name] = value
+        dict.__setattr__(self, name, value)
+
+    def __nonzero__(self):
+        # we're always non-zero
+        return True
 
     def __get_client(self):
         client = self.Client(*self.__client_args, **self.__client_kwargs)
