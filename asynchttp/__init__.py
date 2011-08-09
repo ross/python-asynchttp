@@ -10,7 +10,7 @@ import httplib2
 import logging
 
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+#logger.addHandler(logging.NullHandler())
 
 
 class Promise:
@@ -123,9 +123,7 @@ class _Worker(Thread):
         while not self.__http._has_work():
             (promise, args, kwargs) = self.__http._get_work()
             try:
-                print "sending"
                 response, content = self.__handle.request(*args, **kwargs)
-                print "recieved"
                 promise.fulfill(response, content)
             except Exception, e:
                 logger.warn('request raised exception: %s', e)
