@@ -7,6 +7,10 @@ from __future__ import absolute_import
 from asynchttp import Http
 from httplib2 import ServerNotFoundError
 from pprint import pprint
+import logging
+
+fmt = '%(asctime)s %(thread)d %(name)s %(levelname)-8s %(message)s'
+#logging.basicConfig(level=logging.DEBUG, format=fmt)
 
 http = Http()
 

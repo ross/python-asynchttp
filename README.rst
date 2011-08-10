@@ -41,3 +41,18 @@ A simple example making a single request (not that interesting)::
     # completed and then print.
 
 See the examples directory for more detailed/interesting examples.
+
+Logging
+=======
+
+Asynchronous code can be a pain to debug so asynchttp is pretty aggressive when
+it comes to logging. If you're trying to track things down your best bet is
+probably to turn on debug logging, at least for the asynchttp logger, and to use
+a format that includes the the time and thread id or name.
+
+Adding the following snippet to your app should do the trick::
+
+    import logging
+
+    fmt = '%(asctime)s %(thread)d %(name)s %(levelname)-8s %(message)s'
+    logging.basicConfig(level=DEBUG, format=format)

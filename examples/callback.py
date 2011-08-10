@@ -9,8 +9,8 @@ from pprint import pprint
 from json import loads
 import logging
 
-
-#logging.basicConfig(level=logging.WARN)
+fmt = '%(asctime)s %(thread)d %(name)s %(levelname)-8s %(message)s'
+#logging.basicConfig(level=logging.DEBUG, format=fmt)
 
 http = Http()
 

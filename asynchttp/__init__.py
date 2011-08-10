@@ -10,24 +10,33 @@ import httplib2
 import logging
 
 logger = logging.getLogger(__name__)
-#logger.addHandler(logging.NullHandler())
+# apparently NullHandler doesn't always exist, this is a best effort to install
+# it so that people don't get warnings from us when they're not using logging
+try:
+    logger.addHandler(logging.NullHandler())
+except AttributeError:
+    pass
 
 
 class Promise:
 
     def __init__(self, callback=None):
+        logger.debug('%s.__init__', self)
         self.__flag = Event()
         self.__callback = callback
 
     def fulfill(self, response, content, exception=None):
+        logger.debug('%s.fullfill', self)
         self.response = response
         self.content = content
         self.exception = exception
         if self.__callback is not None:
+            logger.debug('%s.fullfill invoking callback', self)
             try:
                 self.__callback(self)
             except Exception, e:
-                logger.exception('callback threw an exception')
+                logger.exception('%s.fullfill callback threw an exception',
+                                 self)
                 if self.exception is None:
                     self.exception = e
         self.__flag.set()
@@ -36,8 +45,10 @@ class Promise:
         return self.__flag.is_set()
 
     def __wait(self):
+        logger.debug('%s.__wait', self)
         self.__flag.wait()
         if self.exception:
+            logger.info('%s.__wait: rasing exception', self)
             raise self.exception
 
     def get_response(self):
@@ -49,7 +60,7 @@ class Promise:
         return self.content
 
     def __repr__(self):
-        return '<Response({0})>'.format(self.done())
+        return '<Response({0}, {1})>'.format(id(self), self.done())
 
 
 # TODO: is there a better way to do this? it's really just a proxy that lets us
@@ -114,28 +125,37 @@ class Content:
 class _Worker(Thread):
 
     def __init__(self, http, handle):
+        logger.debug('%s.__init__', self)
         Thread.__init__(self)
         self.__http = http
         self.__handle = handle
 
     def run(self):
+        logger.debug('%s.run', self)
         # we'll only live while there's work for us to do
         while not self.__http._has_work():
             (promise, args, kwargs) = self.__http._get_work()
+            logger.debug('%s.run: work=%s', self, promise)
             try:
                 response, content = self.__handle.request(*args, **kwargs)
                 promise.fulfill(response, content)
             except Exception, e:
-                logger.warn('request raised exception: %s', e)
+                logger.warn('%s.run: request raised exception: %s', self, 
+                            e)
                 promise.fulfill(None, None, e)
 
+        logger.debug('%s.run: done', self)
         self.__http._remove_worker(self)
+
+    def __repr__(self):
+        return '<Worker({0})>'.format(id(self))
 
 
 class Http(dict):
     Client = httplib2.Http
 
     def __init__(self, max_workers=5, *args, **kwargs):
+        logger.debug('%s.__init__', self)
         # NOTE: lowering max workers won't shutdown existing until the queue
         # has been depleted
         self.max_workers = max_workers
@@ -157,7 +177,7 @@ class Http(dict):
     def add_certificate(self, *args, **kwargs):
         self.__client_methods['add_certificate'] = [args, kwargs]
 
-    # TODO: changing attributes won't update existing clients
+    # TODO: changing attributes or methods won't update existing workers
     def __setattr__(self, name, value):
         if '_Http__initializsed' not in self.__dict__:
             # for the __init__ method
@@ -177,6 +197,7 @@ class Http(dict):
         return True
 
     def __get_client(self):
+        logger.debug('%s.__get_client', self)
         client = self.Client(*self.__client_args, **self.__client_kwargs)
         for method, params in self.__client_methods.items():
             getattr(client, method)(*params[0], **params[1])
@@ -185,6 +206,7 @@ class Http(dict):
         return client
 
     def request(self, *args, **kwargs):
+        logger.debug('%s.request: args=%s, kwargs=%s', self, args, kwargs)
         if 'callback' in kwargs:
             promise = Promise(kwargs['callback'])
             del kwargs['callback']
@@ -216,3 +238,6 @@ class Http(dict):
 
     def _get_work(self):
         return self.__queue.get()
+
+    def __repr__(self):
+        return '<Http({0})>'.format(id(self))

@@ -9,8 +9,8 @@ from pprint import pprint
 from json import loads
 import logging
 
-
-logging.basicConfig(level=logging.WARN)
+fmt = '%(asctime)s %(thread)d %(name)s %(levelname)-8s %(message)s'
+#logging.basicConfig(level=logging.DEBUG, format=fmt)
 
 class PromiseObject:
 
@@ -35,7 +35,7 @@ class Agency:
         return self.client.routes(self.id)
 
     def __repr__(self):
-        return 'Agency<{0}>'.format(self.id)
+        return '<Agency({0})>'.format(self.id)
 
 
 class AgencyList:
@@ -44,7 +44,7 @@ class AgencyList:
         self.items = [Agency(item, client) for item in data['items']]
 
     def __repr__(self):
-        return 'AgencyList<{0}>'.format(self.items)
+        return '<AgencyList({0})>'.format(self.items)
 
 
 class Route:
@@ -58,7 +58,7 @@ class Route:
         return self.client.route(self.agency, self.id)
 
     def __repr__(self):
-        return 'Route<{0}>'.format(self.id)
+        return '<Route({0})>'.format(self.id)
 
 
 class RouteList:
@@ -68,7 +68,7 @@ class RouteList:
         self.items = [Route(agency, item, client) for item in data['items']]
 
     def __repr__(self):
-        return 'RouteList<{0}, {1}>'.format(self.agency, self.items)
+        return '<RouteList({0}, {1})>'.format(self.agency, self.items)
 
 
 class RouteDetail:
@@ -78,7 +78,7 @@ class RouteDetail:
         self.agency = agency
 
     def __repr__(self):
-        return 'RouteDetail<{0}, {1}, {2}>'.format(self.agency, self.id,
+        return '<RouteDetait({0}, {1}, {2})>'.format(self.agency, self.id,
                                                    self.display_name)
 
 
