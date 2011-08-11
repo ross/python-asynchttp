@@ -187,7 +187,7 @@ class HttpTest(TestCase):
         # 10 workers, 10 requests
         h = Http(max_workers=10)
         start = datetime.now()
-        promises = [h.request(url) for i in range(0, 10)]
+        pairs = [h.request(url) for i in range(0, 10)]
         for pair in pairs:
             self.assertEqual(pair[0], mock_response,
                              'received expected response')
@@ -202,7 +202,7 @@ class HttpTest(TestCase):
         # 10 workers, 5 requests
         h = Http(max_workers=10)
         start = datetime.now()
-        promises = [h.request(url) for i in range(0, 5)]
+        pairs = [h.request(url) for i in range(0, 5)]
         for pair in pairs:
             self.assertEqual(pair[0], mock_response,
                              'received expected response')
