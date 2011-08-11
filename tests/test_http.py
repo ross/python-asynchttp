@@ -64,6 +64,7 @@ class HttpTest(TestCase):
 
         # make the request
         h = Http()
+        self.assertTrue(h, 'Http instance is non-zero')
         response, content = h.request(url)
         self.assertEqual(response, mock_response, 'received expected response')
         self.assertEqual(str(content), mock_content, 
@@ -83,17 +84,30 @@ class HttpTest(TestCase):
 
         # make the request
         h = Http()
-        h.max_workers = 3
         h.add_credentials('user', 'pass')
         h.add_certificate('ikeyfile', 'certfile', 'url')
         h.follow_redirects = 44
         h.request(url)
 
-        # verify mock
+        # verify results/mock
+        # only way i can find to test if a mock doesn't have an attribute
+        self.assertFalse('max_workers' in client.__dict__)
         verify(client).add_credentials('user', 'pass')
         verify(client).add_certificate('ikeyfile', 'certfile', 'url')
         self.assertEqual(client.follow_redirects, 44,
-                         'attribute set on client')
+                         'follow_redirects attribute set on client')
+
+        # a second route, updates
+        h.add_credentials('user2', 'pass2')
+        h.add_certificate('ikeyfile2', 'certfile2', 'url2')
+        h.follow_redirects = 45
+        h.request(url)
+
+        # re-verify results/mock
+        verify(client).add_credentials('user2', 'pass2')
+        verify(client).add_certificate('ikeyfile2', 'certfile2', 'url2')
+        self.assertEqual(client.follow_redirects, 45,
+                         'follow_redirects attribute re-set on client')
 
     def test_request(self):
 

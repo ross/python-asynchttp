@@ -44,19 +44,19 @@ class Promise:
     def done(self):
         return self.__flag.is_set()
 
-    def __wait(self):
-        logger.debug('%s.__wait', self)
+    def wait(self):
+        logger.debug('%s.wait', self)
         self.__flag.wait()
         if self.exception:
-            logger.info('%s.__wait: rasing exception', self)
+            logger.info('%s.wait: rasing exception', self)
             raise self.exception
 
     def get_response(self):
-        self.__wait()
+        self.wait()
         return self.response
 
     def get_content(self):
-        self.__wait()
+        self.wait()
         return self.content
 
     def __repr__(self):
@@ -65,7 +65,7 @@ class Promise:
 
 # TODO: is there a better way to do this? it's really just a proxy that lets us
 # make sure the promise has been fulfilled
-class Response(dict):
+class Response:
 
     def __init__(self, promise):
         self.__promise = promise
@@ -105,6 +105,9 @@ class Response(dict):
 
     def __getattr__(self, name):
         return getattr(self.__promise.get_response(), name)
+
+    def wait(self):
+        self.__promise.wait()
 
 
 class Content:
@@ -151,7 +154,7 @@ class _Worker(Thread):
         return '<Worker({0})>'.format(id(self))
 
 
-class Http(dict):
+class Http:
     Client = httplib2.Http
 
     def __init__(self, max_workers=5, *args, **kwargs):
@@ -163,46 +166,29 @@ class Http(dict):
         self.__client_args = args
         self.__client_kwargs = kwargs
         self.__client_methods = {}
-        self.__client_attributes = {}
 
         self.__queue = Queue()
         self.__workers = []
 
         self.__initializsed = True
 
-    # TODO: some way to do this generically?
     def add_credentials(self, *args, **kwargs):
         self.__client_methods['add_credentials'] = [args, kwargs]
 
     def add_certificate(self, *args, **kwargs):
         self.__client_methods['add_certificate'] = [args, kwargs]
 
-    # TODO: changing attributes or methods won't update existing workers
-    def __setattr__(self, name, value):
-        if '_Http__initializsed' not in self.__dict__:
-            # for the __init__ method
-            self.__dict__[name] = value
-        elif name not in self.__dict__:
-            # anything we don't know about we need to pass along to the clients
-            # follow_redirects
-            # follow_all_redirects
-            # force_exception_to_status_code
-            # optimistic_concurrency_methods
-            # ignore_etag
-            self.__client_attributes[name] = value
-        dict.__setattr__(self, name, value)
-
-    def __nonzero__(self):
-        # we're always non-zero
-        return True
-
     def __get_client(self):
         logger.debug('%s.__get_client', self)
         client = self.Client(*self.__client_args, **self.__client_kwargs)
         for method, params in self.__client_methods.items():
             getattr(client, method)(*params[0], **params[1])
-        for attribute, value in self.__client_attributes.items():
-            setattr(client, attribute, value)
+        for attribute, value in self.__dict__.items():
+            # don't copy max_workers or any of our 'private' attrs
+            if attribute != 'max_workers' \
+               and not attribute.startswith('_Http__'):
+                print attribute
+                setattr(client, attribute, value)
         return client
 
     def request(self, *args, **kwargs):

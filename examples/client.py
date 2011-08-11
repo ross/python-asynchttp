@@ -22,7 +22,7 @@ class PromiseObject:
         self.response = response
 
     def __getattr__(self, name):
-        self.response.status
+        self.response.wait()
         return getattr(self, name)
 
 class Agency:

@@ -80,3 +80,11 @@ class PromiseTest(TestCase):
         self.assertIsInstance(promise.exception, BooException)
         self.assertRaises(BooException, promise.get_response)
         self.assertRaises(BooException, promise.get_content)
+
+        class HooException(Exception):
+            pass
+
+        promise.fulfill(43, 44, HooException('blah!'))
+        self.assertIsInstance(promise.exception, HooException)
+        self.assertRaises(HooException, promise.get_response)
+        self.assertRaises(HooException, promise.get_content)
