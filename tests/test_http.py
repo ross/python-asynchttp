@@ -65,6 +65,7 @@ class HttpTest(TestCase):
         # make the request
         h = Http()
         self.assertTrue(h, 'Http instance is non-zero')
+        self.assertTrue(str(h), 'Http instance str')
         response, content = h.request(url)
         self.assertEqual(response, mock_response, 'received expected response')
         self.assertEqual(str(content), mock_content, 
@@ -259,6 +260,7 @@ class HttpTest(TestCase):
         response, content = h.request(url, callback=callback)
 
         self.assertEqual(str(content), 'hello world', 'callback was invoked')
+        self.assertEqual(repr(content), 'hello world', 'callback was invoked')
 
         # verify mock
         verify(client).request(url)

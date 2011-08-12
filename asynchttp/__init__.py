@@ -70,11 +70,17 @@ class Response:
     def __init__(self, promise):
         self.__promise = promise
 
+    def __contains__(self, key):
+        return self.__promise.get_response().__contains__(key)
+
     def __getitem__(self, key):
         return self.__promise.get_response()[key]
 
-    def __contains__(self, key):
-        return self.__promise.get_response().__contains__(key)
+    def __setitem__(self, key, value):
+        return self.__promise.get_response().__setitem__(key, value)
+
+    def __delitem__(self, key):
+        return self.__promise.get_response().__delitem__(key)
 
     def keys(self):
         return self.__promise.get_response().keys()
@@ -91,21 +97,15 @@ class Response:
     def __len__(self):
         return self.__promise.get_response().__len__()
 
-    def __setitem__(self, key, value):
-        return self.__promise.get_response().__setitem__(key, value)
-
-    def __delitem__(self, key):
-        return self.__promise.get_response().__delitem__(key)
-
-    def __eq__(self, other):
-        return self.__promise.get_response().__eq__(other)
-
-    def __ne__(self, other):
-        return self.__promise.get_response().__ne__(other)
-
     def __getattr__(self, name):
         return getattr(self.__promise.get_response(), name)
 
+    def __setattr__(self, name, value):
+        if name.startswith('_Response__'):
+            self.__dict__[name] = value
+        else:
+            setattr(self.__promise.get_response(), name, value)
+    
     def wait(self):
         self.__promise.wait()
 
