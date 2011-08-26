@@ -187,7 +187,6 @@ class Http:
             # don't copy max_workers or any of our 'private' attrs
             if attribute != 'max_workers' \
                and not attribute.startswith('_Http__'):
-                print attribute
                 setattr(client, attribute, value)
         return client
 
