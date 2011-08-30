@@ -30,21 +30,25 @@ class Promise:
         self.__stack = extract_stack()[:-2]
 
     def fulfill(self, response, content, exception=None):
-        logger.debug('%s.fullfill', self)
-        self.response = response
-        self.content = content
-        self.exception = exception
-        if self.__callback is not None:
-            logger.debug('%s.fullfill invoking callback', self)
-            try:
-                self.__callback(self)
-            except Exception, e:
-                logger.exception('%s.fullfill callback threw an exception, %s'
-                                 ', original invocation:\n%s', self, e,
-                                 ''.join(format_list(self.__stack)))
-                if self.exception is None:
-                    self.exception = e
-        self.__flag.set()
+        try:
+            logger.debug('%s.fullfill', self)
+            self.response = response
+            self.content = content
+            self.exception = exception
+            if self.__callback is not None:
+                logger.debug('%s.fullfill invoking callback', self)
+                try:
+                    self.__callback(self)
+                except Exception, e:
+                    logger.exception('%s.fullfill callback threw an exception,'
+                                     ' %s, original invocation:\n%s', self, e,
+                                     ''.join(format_list(self.__stack)))
+                    if self.exception is None:
+                        self.exception = e
+        finally:
+            # set flag no matter what else things can hang waiting for a
+            # response
+            self.__flag.set()
 
     def done(self):
         return self.__flag.is_set()
@@ -54,7 +58,7 @@ class Promise:
         self.__flag.wait()
         if self.exception:
             logger.info('%s.wait: raising exception, %s, original invocation:'
-                        '\n%s', self, self.exception, 
+                        '\n%s', self, self.exception,
                         ''.join(format_list(self.__stack)))
             raise self.exception
 
@@ -112,7 +116,10 @@ class Response:
             self.__dict__[name] = value
         else:
             setattr(self.__promise.get_response(), name, value)
-    
+
+    def done(self):
+        return self.__promise.done()
+
     def wait(self):
         self.__promise.wait()
 

@@ -13,11 +13,19 @@ class ResponseTest(TestCase):
 
     def test_response(self):
         promise = Promise()
-        promise.fulfill(httplib2.Response({'status': 200,}), 'hello world')
-        self.assertTrue(promise.done(), 'promise is not ready')
+        self.assertFalse(promise.done(), 'promise is not ready')
 
         response = Response(promise)
+        self.assertFalse(response.done(), 'response is not ready')
+
+        promise.fulfill(httplib2.Response({'status': 200,}), 'hello world')
+
+        self.assertTrue(promise.done(), 'promise is ready')
+        self.assertTrue(response.done(), 'response is ready')
+
+        # wait doesn't block
         response.wait()
+
         self.assertTrue('status' in response, 'status missing')
         self.assertEqual(response['status'], 200, 'unexpected status item')
         self.assertEqual(response.status, 200, 'unexpected status attr')
