@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from Queue import Queue
 from threading import Event, Thread
+from traceback import extract_stack, format_list
 import httplib2
 import logging
 
@@ -24,6 +25,9 @@ class Promise:
         logger.debug('%s.__init__', self)
         self.__flag = Event()
         self.__callback = callback
+        # record the stack of our invocation, omit ourself and the call to our
+        # ctor (-2, last 2)
+        self.__stack = extract_stack()[:-2]
 
     def fulfill(self, response, content, exception=None):
         logger.debug('%s.fullfill', self)
@@ -35,8 +39,9 @@ class Promise:
             try:
                 self.__callback(self)
             except Exception, e:
-                logger.exception('%s.fullfill callback threw an exception',
-                                 self)
+                logger.exception('%s.fullfill callback threw an exception, %s'
+                                 ', original invocation:\n%s', self, e,
+                                 ''.join(format_list(self.__stack)))
                 if self.exception is None:
                     self.exception = e
         self.__flag.set()
@@ -48,7 +53,9 @@ class Promise:
         logger.debug('%s.wait', self)
         self.__flag.wait()
         if self.exception:
-            logger.info('%s.wait: rasing exception', self)
+            logger.info('%s.wait: raising exception, %s, original invocation:'
+                        '\n%s', self, self.exception, 
+                        ''.join(format_list(self.__stack)))
             raise self.exception
 
     def get_response(self):
@@ -143,8 +150,7 @@ class _Worker(Thread):
                 response, content = self.__handle.request(*args, **kwargs)
                 promise.fulfill(response, content)
             except Exception, e:
-                logger.warn('%s.run: request raised exception: %s', self, 
-                            e)
+                logger.warn('%s.run: request raised exception: %s', self, e)
                 promise.fulfill(None, None, e)
 
         logger.debug('%s.run: done', self)

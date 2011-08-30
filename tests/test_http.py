@@ -4,7 +4,7 @@
 
 from __future__ import absolute_import
 
-from asynchttp import Http
+from asynchttp import Http, _Worker
 from datetime import datetime, timedelta
 from mockito import inorder, mock, verify, when
 from mockito.invocation import AnswerSelector, CompositeAnswer, Return
@@ -264,3 +264,8 @@ class HttpTest(TestCase):
 
         # verify mock
         verify(client).request(url)
+
+    def test_worker(self):
+        # just a smoke test for _Worker.__repr__()
+        worker = _Worker(None, None)
+        self.assertTrue(worker.__repr__())
