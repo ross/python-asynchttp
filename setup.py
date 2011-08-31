@@ -10,7 +10,7 @@ except Exception:
 
 setup(
     name='asynchttp',
-    version='0.0.1',
+    version='0.0.2',
     description='A simple httplib2 based asynchronous HTTP library for python',
     author='Ross McFarland',
     author_email='ross@gmail.com',
@@ -18,15 +18,16 @@ setup(
 
     long_description=long_description,
     classifiers=[
-        # TODO: update
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX',
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Software Development :: Libraries :: Python Modules',
     ],
 
     packages=['asynchttp'],

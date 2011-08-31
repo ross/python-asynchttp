@@ -2,6 +2,11 @@
 #
 #
 
+__version__ = '0.0.2'
+__date__ = '2011-08-30'
+__author__ = 'Ross McFarland'
+__credits__ = '''Ross McFarland'''
+
 from __future__ import absolute_import
 
 from Queue import Queue
@@ -9,6 +14,7 @@ from threading import Event, Thread
 from traceback import extract_stack, format_list
 import httplib2
 import logging
+
 
 logger = logging.getLogger(__name__)
 # apparently NullHandler doesn't always exist, this is a best effort to install
