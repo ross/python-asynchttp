@@ -2,12 +2,12 @@
 #
 #
 
-__version__ = '0.0.2'
+from __future__ import absolute_import
+
+__version__ = '0.0.3'
 __date__ = '2011-08-30'
 __author__ = 'Ross McFarland'
 __credits__ = '''Ross McFarland'''
-
-from __future__ import absolute_import
 
 from Queue import Queue
 from threading import Event, Thread

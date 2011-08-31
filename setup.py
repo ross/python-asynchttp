@@ -10,7 +10,7 @@ except Exception:
 
 setup(
     name='asynchttp',
-    version='0.0.2',
+    version='0.0.3',
     description='A simple httplib2 based asynchronous HTTP library for python',
     author='Ross McFarland',
     author_email='ross@gmail.com',
