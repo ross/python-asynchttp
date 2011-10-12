@@ -28,12 +28,12 @@ except AttributeError:
 class Promise:
 
     def __init__(self, callback=None):
-        logger.debug('%s.__init__', self)
         self.__flag = Event()
         self.__callback = callback
         # record the stack of our invocation, omit ourself and the call to our
         # ctor (-2, last 2)
         self.__stack = extract_stack()[:-2]
+        logger.debug('%s.__init__', self)
 
     def fulfill(self, response, content, exception=None):
         try:
@@ -148,10 +148,10 @@ class Content:
 class _Worker(Thread):
 
     def __init__(self, http, handle):
-        logger.debug('%s.__init__', self)
         Thread.__init__(self)
         self.__http = http
         self.__handle = handle
+        logger.debug('%s.__init__', self)
 
     def run(self):
         logger.debug('%s.run', self)
@@ -177,7 +177,6 @@ class Http:
     Client = httplib2.Http
 
     def __init__(self, max_workers=5, *args, **kwargs):
-        logger.debug('%s.__init__', self)
         # NOTE: lowering max workers won't shutdown existing until the queue
         # has been depleted
         self.max_workers = max_workers
@@ -190,6 +189,7 @@ class Http:
         self.__workers = []
 
         self.__initializsed = True
+        logger.debug('%s.__init__', self)
 
     def add_credentials(self, *args, **kwargs):
         self.__client_methods['add_credentials'] = [args, kwargs]
