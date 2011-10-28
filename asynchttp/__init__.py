@@ -10,6 +10,7 @@ __author__ = 'Ross McFarland'
 __credits__ = '''Ross McFarland'''
 
 from Queue import Queue
+from sys import exc_info
 from threading import Event, Thread
 from traceback import extract_stack, format_list
 import httplib2
@@ -35,12 +36,14 @@ class Promise:
         self.__stack = extract_stack()[:-2]
         logger.debug('%s.__init__', self)
 
-    def fulfill(self, response, content, exception=None):
+    def fulfill(self, response, content, caught_exc_info=None):
         try:
             logger.debug('%s.fullfill', self)
             self.response = response
             self.content = content
-            self.exception = exception
+            self.caught_exc_info = caught_exc_info
+            if caught_exc_info:
+                self.exception = caught_exc_info[1]
             if self.__callback is not None:
                 logger.debug('%s.fullfill invoking callback', self)
                 try:
@@ -49,8 +52,9 @@ class Promise:
                     logger.exception('%s.fullfill callback threw an exception,'
                                      ' %s, original invocation:\n%s', self, e,
                                      ''.join(format_list(self.__stack)))
-                    if self.exception is None:
-                        self.exception = e
+                    if self.caught_exc_info is None:
+                        self.caught_exc_info = exc_info()
+                        self.exception = self.caught_exc_info[1]
         finally:
             # set flag no matter what else things can hang waiting for a
             # response
@@ -62,11 +66,12 @@ class Promise:
     def wait(self):
         logger.debug('%s.wait', self)
         self.__flag.wait()
-        if self.exception:
+        if self.caught_exc_info:
             logger.info('%s.wait: raising exception, %s, original invocation:'
-                        '\n%s', self, self.exception,
+                        '\n%s', self, self.caught_exc_info[1],
                         ''.join(format_list(self.__stack)))
-            raise self.exception
+            raise self.caught_exc_info[0], self.caught_exc_info[1], \
+                    self.caught_exc_info[2]
 
     def get_response(self):
         self.wait()
@@ -164,7 +169,7 @@ class _Worker(Thread):
                 promise.fulfill(response, content)
             except Exception, e:
                 logger.warn('%s.run: request raised exception: %s', self, e)
-                promise.fulfill(None, None, e)
+                promise.fulfill(None, None, exc_info())
 
         logger.debug('%s.run: done', self)
         self.__http._remove_worker(self)

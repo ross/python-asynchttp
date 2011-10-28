@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from asynchttp import Promise
 from datetime import datetime, timedelta
+from sys import exc_info
 from threading import Thread
 from time import sleep
 from unittest2 import TestCase
@@ -84,7 +85,8 @@ class PromiseTest(TestCase):
         class HooException(Exception):
             pass
 
-        promise.fulfill(43, 44, HooException('blah!'))
+        e = HooException('blah!')
+        promise.fulfill(43, 44, (e.__class__, e, None))
         self.assertIsInstance(promise.exception, HooException)
         self.assertRaises(HooException, promise.get_response)
         self.assertRaises(HooException, promise.get_content)
