@@ -1,3 +1,6 @@
-*.pyc
+asynchttp.egg-info/
+build/
 .coverage
+dist/
 htmlcov/
+*.pyc
