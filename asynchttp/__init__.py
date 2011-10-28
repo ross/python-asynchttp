@@ -4,8 +4,8 @@
 
 from __future__ import absolute_import
 
-__version__ = '0.0.3'
-__date__ = '2011-08-30'
+__version__ = '0.0.4'
+__date__ = '2011-10-27'
 __author__ = 'Ross McFarland'
 __credits__ = '''Ross McFarland'''
 
