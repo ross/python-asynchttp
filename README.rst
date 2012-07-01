@@ -2,9 +2,9 @@ asynchttp is an almost drop in replacement for httplib2 that provides
 asynchronous http request behavior.
 
 asynchttp uses python threading and Queues and provides callback mechanisms to
-allow de-serialization and process to happen in the background (worker threads)
-as well. You can queue up arbitrary numbers of requests and a specified maximum
-number of workers will process each request in turn.
+allow de-serialization and processing to happen in the background (worker
+threads) as well. You can queue up arbitrary numbers of requests and a
+specified maximum number of workers will process each request in turn.
 
 There are two known differences between straight httplib2 and asynchttp:
 
@@ -17,9 +17,7 @@ There are two known differences between straight httplib2 and asynchttp:
   has completed the request, the returned content is a "promise" object of
   sorts. It defines a __str__ method that should in most cases cause the object
   to behave as required, but unfortunately there may be times when you have to
-  str(content) to force it in to a string to get the desired behavior. (a side
-  note, but content should really be a buffer/io object rather than a plain
-  string in the first place.)
+  str(content) to force it in to a string to get the desired behavior. 
 
 Example
 =======
