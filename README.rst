@@ -6,6 +6,9 @@ allow de-serialization and processing to happen in the background (worker
 threads) as well. You can queue up arbitrary numbers of requests and a
 specified maximum number of workers will process each request in turn.
 
+Differences
+===========
+
 There are two known differences between straight httplib2 and asynchttp:
 
 * exceptions are thrown when the response and/or content is accessed. since
@@ -18,6 +21,13 @@ There are two known differences between straight httplib2 and asynchttp:
   sorts. It defines a __str__ method that should in most cases cause the object
   to behave as required, but unfortunately there may be times when you have to
   str(content) to force it in to a string to get the desired behavior. 
+
+Overhead
+========
+
+Benchmarking has shown the overhead of the worker threads to be minimal and
+care has been keep it that way. Latency has been between 0.0001s and 0.0002s,
+0.1ms to 0.2ms, and will vary slightly based on workload.
 
 Example
 =======
