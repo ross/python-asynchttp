@@ -1,0 +1,5 @@
+coverage
+mockito
+nose
+pep8
+unittest2
